@@ -45,7 +45,7 @@ class Blockchain(object):
 
     def is_valid_proof(self, block, block_hash):
         return (block_hash.startswith('0' * Blockchain.difficulty) \
-        and block_hash == block.compute_hash())
+        and block_hash == block.get_hash())
 
     def mine(self):
         if not self.unconfirmed_transactions:

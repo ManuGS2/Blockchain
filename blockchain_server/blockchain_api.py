@@ -144,7 +144,7 @@ def consensus():
     global blockchain
     
     longest_chain = None
-    current_len = len(blockchain)
+    current_len = len(blockchain.chain)
 
     for node in peers:
         response = requests.get("{}/chain".format(node))
