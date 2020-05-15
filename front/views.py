@@ -4,7 +4,7 @@ import json
 import requests
 from flask import render_template, redirect, request
 
-from blockchain_front import app
+from front import app
 
 # Node in the blockchain network that our application will communicate with
 # to fetch and add data.
