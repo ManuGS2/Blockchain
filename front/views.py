@@ -1,10 +1,12 @@
 import datetime
 import json
+import os
 
 import requests
-from flask import render_template, redirect, request
+from flask import Flask, render_template, redirect, request
 
-from front import app
+# New instance app
+app = Flask(__name__)
 
 # Node in the blockchain network that our application will communicate with
 # to fetch and add data.
@@ -34,9 +36,9 @@ def fetch_posts():
         )
 
 
-
 @app.route('/')
 def index():
+    app.logger.debug("Var %s", os.environ.get("NODE_VAR"))
     fetch_posts()
 
     return render_template(
