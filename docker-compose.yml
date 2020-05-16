@@ -3,22 +3,18 @@ services:
   web:
     build: 
       context: front
-      args: 
-        PORT: 5000
-        HOST: 127.0.0.1
     image: webapp:latest
     network_mode: host
+    command: flask run --port 5000
   
   server:
     depends_on: 
       - redisdb
     build: 
       context: server
-      args: 
-        PORT: 8000
-        HOST: 127.0.0.1
     image: server:latest
     network_mode: host
+    command: flask run --port 8000
   
   server2:
     depends_on: 
