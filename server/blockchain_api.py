@@ -30,9 +30,10 @@ def new_transaction():
 
 @app.route("/chain", methods=["GET"])
 def get_chain():
+    global peers
     chain_data = [block.__dict__ for block in blockchain.chain]
 
-    return json.dumps({"length": len(chain_data), "chain": chain_data}), 200
+    return json.dumps({"length": len(chain_data), "chain": chain_data, "peers": list(peers)}), 200
 
     
 @app.route("/mine", methods=["GET"])
@@ -65,7 +66,8 @@ def register_new_peer():
         return "Invalid node address", 404
     
     peers.add(node_address)
-    return get_chain(), 200
+
+    return get_chain()
 
 
 @app.route("/register_with", methods=["POST"])
@@ -90,11 +92,13 @@ def register_with_existing_node():
         
         chain_dump = response.json()['chain']
         blockchain = create_chain_from_dump(chain_dump)
+
         peers.update(response.json()['peers'])
 
         return "Registration successful", 200
 
     else:
+        print(response.content, response.status_code)
         return response.content, response.status_code
 
 

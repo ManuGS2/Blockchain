@@ -5,9 +5,6 @@ ARG HOST
 ENV FLASK_APP run_app.py
 ENV command "flask run --port $PORT"
 ENV FLASK_RUN_HOST ${HOST}
-RUN echo ${FLASK_APP}
-RUN echo ${HOST}
-RUN echo ${FLASK_RUN_HOST}
 
 COPY run_app.py .
 COPY requirements.txt .
