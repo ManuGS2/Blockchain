@@ -1,13 +1,32 @@
-version: '3'
+version: "3.4"
 services:
-  front:
+  web:
     build: front
+    image: webapp:latest
     ports:
       - "5000:5000"
     network_mode: host
   
   server:
-    build: server
+    build: 
+      context: server
+      args: 
+        PORT: 8000
+    image: server:latest
     ports:
-      - "8000:5000"
+      - "8001:8000"
     network_mode: host
+  
+
+networks:
+  frontnet:
+    ipam:
+      driver: host
+      config:
+        - subnet: "172.16.238.0/24"
+
+  backnet:
+    ipam:
+      driver: host
+      config:
+        - subnet: "172.16.239.0/24"
