@@ -3,12 +3,16 @@ import json
 
 from flask import Flask, request
 import requests
+import redis
+
 from Blockchain import Blockchain
 from Block import Block
+
 
 app = Flask(__name__)
 peers = set()
 blockchain = Blockchain()
+r = redis.Redis(host='localhost', port=6379, db=0)
 
 @app.route("/new_transaction", methods=["POST"])
 def new_transaction():
