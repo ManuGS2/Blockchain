@@ -99,6 +99,7 @@ def register_with_existing_node():
 
         peers.update(response.json()['peers'])
         peers.add(node_address+"/")
+        peers.discard(request.host_url)
 
         return "Registration successful", 200
 
@@ -140,7 +141,6 @@ def create_chain_from_dump(chain_dump):
     new_blockchain.create_genesis_block()
 
     for idx, block_data in enumerate(chain_dump):
-
         if idx == 0:
             continue  # Skip gen block
 
@@ -157,7 +157,7 @@ def create_chain_from_dump(chain_dump):
         if not added:
             raise Exception("The chain dump is tampered!!")
             
-        return new_blockchain
+    return new_blockchain
 
 
 def consensus():

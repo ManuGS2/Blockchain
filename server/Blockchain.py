@@ -25,7 +25,7 @@ class Blockchain(object):
         previous_hash = self.last_block.hash
 
         if previous_hash != block.previous_hash or \
-        not Blockchain.is_valid_proof(block, proof):
+            not Blockchain.is_valid_proof(block, proof):
             return False
 
         block.hash = proof
@@ -45,8 +45,8 @@ class Blockchain(object):
 
     @classmethod
     def is_valid_proof(cls, block, block_hash):
-        return (block_hash.startswith('0' * Blockchain.difficulty) \
-        and block_hash == block.get_hash())
+        return (block_hash.startswith('0' * Blockchain.difficulty) and 
+            block_hash == block.get_hash())
 
     def mine(self):
         if not self.unconfirmed_transactions:
@@ -66,7 +66,7 @@ class Blockchain(object):
         return True
 
     @classmethod
-    def validate_chain(self, chain):
+    def validate_chain(cls, chain):
         result = True
         previous_hash = "0"
 
@@ -74,7 +74,8 @@ class Blockchain(object):
             block_hash = block.hash
             delattr(block, "hash")
 
-            if not cls.is_valid_proof(block, block_hash) or previous_hash != block.previous_hash:
+            if not cls.is_valid_proof(block, block_hash) or \
+                previous_hash != block.previous_hash:
                 result = False
                 break
 
