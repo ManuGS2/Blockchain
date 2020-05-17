@@ -41,27 +41,31 @@ If you go by this way, I suggest you to use virtual environment
 
   3. Install the dependencies
 
-  `pip install -r server/requirements.txt`
-
-  `pip install -r front/requirements.txt`
+  ```
+  pip install -r server/requirements.txt
+  pip install -r front/requirements.txt
+  ```
 
   4. Run the node server for connecting to blockchain network with the next commands
 
-  `export FLASK_APP=server/blockchain_api.py`
-
-  `flask run --port 8000`
+  ```
+  export FLASK_APP=server/blockchain_api.py
+  flask run --port 8000
+  ```
   
   5. Run the web application with the next commands
 
-  `export FLASK_APP=front/views.py`
-
-  `flask run --port 5000`
+  ```
+  export FLASK_APP=front/views.py
+  flask run --port 5000
+  ```
 
   6. If you want to run more nodes, just follow the samen in step 4 but changing the port
 
-  `export FLASK_APP=server/blockchain_api.py`
-
-  `flask run --port 8001`
+  ```
+  export FLASK_APP=server/blockchain_api.py
+  flask run --port 8001
+  ```
 
 Your web application will be running on http://127.0.0.1:5000/
 
