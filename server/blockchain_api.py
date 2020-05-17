@@ -33,11 +33,13 @@ def new_transaction():
 
 @app.route("/chain", methods=["GET"])
 def get_chain():
-    global peers
     chain_data = [block.__dict__ for block in blockchain.chain]
 
-    return json.dumps({"length": len(chain_data), "chain": chain_data, "peers": list(peers)}), 200
-
+    return json.dumps({
+        "length": len(chain_data), 
+        "chain": chain_data, 
+        "peers": list(peers)
+    })
     
 @app.route("/mine", methods=["GET"])
 def mine_txns():
@@ -63,19 +65,13 @@ def get_pending_txns():
 
 @app.route("/register_node", methods=["POST"])
 def register_new_peer():
-    node_address = request.get_json().get("node_address")
-
+    node_address = request.get_json()["node_address"]
     if not node_address:
-        return "Invalid node address", 404
-    
-    result = json.loads(get_chain()[0])
-    peers.add(node_address)
-    
-    new_peers = result["peers"]
-    length = result["length"]
-    chain = result["chain"]
+        return "Invalid node address", 400
 
-    return json.dumps({"length": length, "chain": chain, "peers": new_peers}), 200
+    peers.add(node_address)
+
+    return get_chain()
 
 
 @app.route("/register_with", methods=["POST"])
@@ -83,7 +79,7 @@ def register_with_existing_node():
     node_address = request.get_json().get("node_address")
 
     if not node_address:
-        return "Invalid node address", 404
+        return "Invalid node address", 400
 
     data = {"node_address": request.host_url}
     headers = {'Content-Type': "application/json"}
@@ -102,7 +98,7 @@ def register_with_existing_node():
         blockchain = create_chain_from_dump(chain_dump)
 
         peers.update(response.json()['peers'])
-        peers.add(node_address)
+        peers.add(node_address+"/")
 
         return "Registration successful", 200
 
@@ -132,8 +128,11 @@ def verify_and_add_block():
 
 def announce_new_block(block):
     for peer in peers:
-        url = "{}/add_block".format(peer)
-        requests.post(url, data=json.dumps(block.__dict__, sort_keys=True))
+        requests.post(
+            "{}add_block".format(peer), 
+            data=json.dumps(block.__dict__, sort_keys=True),
+            headers={'Content-Type': "application/json"}
+        )
 
 
 def create_chain_from_dump(chain_dump):
@@ -168,7 +167,7 @@ def consensus():
     current_len = len(blockchain.chain)
 
     for node in peers:
-        response = requests.get("{}/chain".format(node))
+        response = requests.get("{}chain".format(node))
         length = response.json().get("length")
         chain = response.json().get("chain")
 
