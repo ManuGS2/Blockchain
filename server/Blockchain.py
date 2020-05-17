@@ -8,11 +8,10 @@ class Blockchain(object):
     def __init__(self):
         self.unconfirmed_transactions = []
         self.chain = []
-        self.create_genesis_block()
 
     def create_genesis_block(self):
-        genesis_block = Block(0, [], time.time(), "0")
-        genesis_block.hash = genesis_block.get_hash()
+        genesis_block = Block(0, [], 0, "0")
+        genesis_block.hash = Blockchain.proof_of_work(genesis_block)
         self.chain.append(genesis_block)
 
     @property
@@ -33,7 +32,8 @@ class Blockchain(object):
         self.chain.append(block)
         return True
 
-    def proof_of_work(self, block):
+    @staticmethod
+    def proof_of_work(block):
         block.nonce = 0
         computed_hash = block.get_hash()
 
@@ -59,12 +59,11 @@ class Blockchain(object):
             previous_hash=last_block.hash
         )
 
-        proof = self.proof_of_work(new_block)
+        proof = Blockchain.proof_of_work(new_block)
         self.add_block(new_block, proof)
         self.unconfirmed_transactions = []
         return new_block.index
 
-    
     def validate_chain(self, chain):
         result = True
         previous_hash = "0"

@@ -11,7 +11,10 @@ from Block import Block
 
 app = Flask(__name__)
 peers = set()
+
 blockchain = Blockchain()
+blockchain.create_genesis_block()
+
 r = redis.Redis(host='localhost', port=6379, db=0)
 
 @app.route("/new_transaction", methods=["POST"])
@@ -65,9 +68,14 @@ def register_new_peer():
     if not node_address:
         return "Invalid node address", 404
     
+    result = json.loads(get_chain()[0])
     peers.add(node_address)
+    
+    new_peers = result["peers"]
+    length = result["length"]
+    chain = result["chain"]
 
-    return get_chain()
+    return json.dumps({"length": length, "chain": chain, "peers": new_peers}), 200
 
 
 @app.route("/register_with", methods=["POST"])
@@ -82,7 +90,7 @@ def register_with_existing_node():
 
     response = requests.post(
         node_address + "/register_node", 
-        data=json.dumps(data), 
+        data=json.dumps(data),  
         headers=headers
     )
 
@@ -94,11 +102,11 @@ def register_with_existing_node():
         blockchain = create_chain_from_dump(chain_dump)
 
         peers.update(response.json()['peers'])
+        peers.add(node_address)
 
         return "Registration successful", 200
 
     else:
-        print(response.content, response.status_code)
         return response.content, response.status_code
 
 
@@ -109,7 +117,8 @@ def verify_and_add_block():
         block_data["index"],
         block_data["transactions"],
         block_data["timestamp"],
-        block_data["previous_hash"]
+        block_data["previous_hash"],
+        block_data["nonce"]
     )
 
     proof = block_data['hash']
@@ -128,24 +137,28 @@ def announce_new_block(block):
 
 
 def create_chain_from_dump(chain_dump):
-    blockchain = Blockchain()
+    new_blockchain = Blockchain()
+    new_blockchain.create_genesis_block()
+
     for idx, block_data in enumerate(chain_dump):
+
+        if idx == 0:
+            continue  # Skip gen block
+
         block = Block(
             block_data["index"],
             block_data["transactions"],
             block_data["timestamp"],
-            block_data["previous_hash"]
+            block_data["previous_hash"],
+            block_data["nonce"]
         )
         proof = block_data['hash']
-        if idx > 0:
-            added = blockchain.add_block(block, proof)
-            if not added:
-                raise Exception("The chain dump is tampered!!")
+        added = new_blockchain.add_block(block, proof)
 
-        else:  # the block is a genesis block, no verification needed
-            blockchain.chain.append(block)
+        if not added:
+            raise Exception("The chain dump is tampered!!")
             
-        return blockchain
+        return new_blockchain
 
 
 def consensus():
@@ -168,6 +181,3 @@ def consensus():
         return True
 
     return False
-
-
-
