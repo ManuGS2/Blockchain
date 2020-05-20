@@ -10,11 +10,11 @@ from Block import Block
 
 
 app = Flask(__name__)
-peers = set()
 
 blockchain = Blockchain()
 blockchain.create_genesis_block()
 
+# Opening connection pool to Redis
 r = redis.Redis(host='localhost', port=6379, db=0)
 
 @app.route("/new_transaction", methods=["POST"])
@@ -34,11 +34,12 @@ def new_transaction():
 @app.route("/chain", methods=["GET"])
 def get_chain():
     chain_data = [block.__dict__ for block in blockchain.chain]
+    peers = [peer.decode("ASCII") for peer in r.smembers("peers")]
 
     return json.dumps({
         "length": len(chain_data), 
         "chain": chain_data, 
-        "peers": list(peers)
+        "peers": peers
     })
     
 @app.route("/mine", methods=["GET"])
@@ -69,7 +70,7 @@ def register_new_peer():
     if not node_address:
         return "Invalid node address", 400
 
-    peers.add(node_address)
+    r.sadd("peers", node_address)
 
     return get_chain()
 
@@ -92,14 +93,13 @@ def register_with_existing_node():
 
     if response.status_code == 200:
         global blockchain
-        global peers
         
         chain_dump = response.json()['chain']
         blockchain = create_chain_from_dump(chain_dump)
 
-        peers.update(response.json()['peers'])
-        peers.add(node_address+"/")
-        peers.discard(request.host_url)
+        r.sadd("peers", *response.json()['peers'])
+        r.sadd("peers", node_address+"/")
+        r.srem("peers", request.host_url)
 
         return "Registration successful", 200
 
@@ -128,9 +128,9 @@ def verify_and_add_block():
 
 
 def announce_new_block(block):
-    for peer in peers:
+    for peer in r.smembers("peers"):
         requests.post(
-            "{}add_block".format(peer), 
+            "{}add_block".format(peer.decode("ASCII")), 
             data=json.dumps(block.__dict__, sort_keys=True),
             headers={'Content-Type': "application/json"}
         )
@@ -166,8 +166,8 @@ def consensus():
     longest_chain = None
     current_len = len(blockchain.chain)
 
-    for node in peers:
-        response = requests.get("{}chain".format(node))
+    for node in r.smembers("peers"):
+        response = requests.get("{}chain".format(node.decode("ASCII")))
         length = response.json().get("length")
         chain = response.json().get("chain")
 
